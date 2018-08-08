@@ -2,10 +2,15 @@ package com.example.admin.itrack;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
+import android.Manifest;
 import android.support.design.button.MaterialButton;
 import android.support.design.widget.TextInputEditText;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.view.View;
@@ -15,10 +20,13 @@ import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.example.admin.itrack.models.Users;
+import com.example.admin.itrack.utils.Constants;
 import com.example.admin.itrack.utils.CustomJSONRequest;
 import com.example.admin.itrack.utils.VolleySingleton;
 import com.mikepenz.fontawesome_typeface_library.FontAwesome;
 import com.mikepenz.iconics.IconicsDrawable;
+import com.pubnub.api.PNConfiguration;
+import com.pubnub.api.PubNub;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -27,6 +35,7 @@ import java.util.Map;
 
 public class LoginActivity extends AppCompatActivity {
     private MaterialButton mbLogin;
+    public static PubNub pubnub; // Pubnub instance
     private static final String username = "username";
     private static final String password = "password";
     private static final String message = "message";
@@ -36,10 +45,10 @@ public class LoginActivity extends AppCompatActivity {
     private static final String userId = "userId";
     private static final String usertype = "usertype";
     private ProgressDialog pDialog;
-    private static final String WEB_API_LOGIN_URL = "http://192.168.1.136:8080/android/login.php";
-//    private static final String WEB_API_LOGIN_URL = "http://192.168.1.119:8080/android/login.php";
+    //private static final String WEB_API_LOGIN_URL = "http://192.168.1.136:8080/android/login.php";
+    private static final String WEB_API_LOGIN_URL = "http://192.168.254.159:8080/android/login.php";
 
-    //private static final String WEB_API_LOGIN_URL = "http://cel.x10host.com/android/login.php";
+//    private static final String WEB_API_LOGIN_URL = "http://cel.x10host.com/android/login.php";
 
     private String enteredUsername, enteredPassword;
     private TextInputEditText etUsername, etPassword;
@@ -52,6 +61,10 @@ public class LoginActivity extends AppCompatActivity {
         etUsername = findViewById(R.id.username);
         etPassword = findViewById(R.id.password);
         userInstance = Users.getInstance();
+        initPubnub();
+        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.M) {
+            checkPermission();
+        }
         initializeProgressDialog();
         mbLogin.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -199,4 +212,31 @@ public class LoginActivity extends AppCompatActivity {
             getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
         }
     }//Focus the cursor to where the error originated
+
+    /*
+       Creates PNConfiguration instance and enters Pubnub credentials to create Pubnub instance.
+       This Pubnub instance will be used whenever we need to create connection to Pubnub.
+    */
+    private void initPubnub() {
+        PNConfiguration pnConfiguration = new PNConfiguration();
+        pnConfiguration.setSubscribeKey(Constants.PUBNUB_SUBSCRIBE_KEY);
+        pnConfiguration.setPublishKey(Constants.PUBNUB_PUBLISH_KEY);
+        pnConfiguration.setSecure(true);
+        pubnub = new PubNub(pnConfiguration);
+    }
+
+    /*
+      Checks user's location permission to see whether user has granted access to fine location and coarse location.
+      If not it will request these permissions.
+   */
+    public void checkPermission() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                ) {//Can add more as per requirement
+
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
+                    123);
+        }
+    }
 }
