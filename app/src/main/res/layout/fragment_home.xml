@@ -4,9 +4,11 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="10dp"
+    android:id="@+id/fragment_home_container"
     android:background="#FCFCFC">
     <ScrollView
         android:layout_width="fill_parent"
+        android:layout_centerInParent="true"
         android:layout_height="wrap_content">
         <LinearLayout
             android:layout_width="match_parent"
@@ -143,9 +145,10 @@
                         </LinearLayout>
 
                         <TextView
+                            android:id="@+id/txt_location"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Show map location"
+                            android:text="Track minor"
                             android:textColor="#000"
                             android:textSize="18dp" />
                         <View

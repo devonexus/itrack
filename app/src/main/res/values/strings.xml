@@ -42,4 +42,6 @@
     <string name="action_search">Search</string>
     <string name="action_delete">Delete</string>
     <string name="nav_logout">Logout</string>
+    <string name="track_minor">Track location</string>
+    <string name="publish_location">Publish location</string>
 </resources>

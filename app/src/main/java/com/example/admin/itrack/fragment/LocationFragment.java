@@ -4,18 +4,21 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.LinearInterpolator;
 
-import com.example.admin.itrack.LoginActivity;
 import com.example.admin.itrack.R;
-import com.example.admin.itrack.utils.Constants;
-import com.example.admin.itrack.utils.JsonUtil;
+import com.example.admin.itrack.models.MinorLocation;
+import com.example.admin.itrack.utils.CropCircleUtil;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -24,17 +27,8 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.pubnub.api.PubNub;
-import com.pubnub.api.callbacks.SubscribeCallback;
-import com.pubnub.api.models.consumer.PNStatus;
-import com.pubnub.api.models.consumer.pubsub.PNMessageResult;
-import com.pubnub.api.models.consumer.pubsub.PNPresenceEventResult;
 
-import java.util.Arrays;
-import java.util.LinkedHashMap;
 import java.util.Map;
-
-import static com.google.android.gms.internal.zzagz.runOnUiThread;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -50,7 +44,7 @@ public class LocationFragment extends Fragment implements OnMapReadyCallback{
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
     private SupportMapFragment mMapFragment; // MapView UI element
-
+    public static MinorLocation minorLocation;
     private GoogleMap mGoogleMap; // object that represents googleMap and allows us to use Google Maps API features
 
     private Marker driverMarker; // Marker to display driver's location
@@ -86,21 +80,38 @@ public class LocationFragment extends Fragment implements OnMapReadyCallback{
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
-        mMapFragment = (SupportMapFragment) getChildFragmentManager()
-                .findFragmentById(R.id.map);
-        mMapFragment.getMapAsync(this);
+//        if (getArguments() != null) {
+//            mParam1 = getArguments().getString(ARG_PARAM1);
+//            mParam2 = getArguments().getString(ARG_PARAM2);
+//        }
+
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
+        minorLocation = MinorLocation.getInstance();
         View view = inflater.inflate(R.layout.fragment_location, container, false);
+        mMapFragment = (SupportMapFragment) getChildFragmentManager()
+                .findFragmentById(R.id.map);
+        mMapFragment.getMapAsync(this);
         return view;
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
     }
 
     // TODO: Rename method, update argument and hook method into UI event
@@ -110,66 +121,6 @@ public class LocationFragment extends Fragment implements OnMapReadyCallback{
         }
     }
 
-
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if (context instanceof OnFragmentInteractionListener) {
-            mListener = (OnFragmentInteractionListener) context;
-        }
-//        else {
-//            throw new RuntimeException(context.toString()
-//                    + " must implement OnFragmentInteractionListener");
-//        }
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        mListener = null;
-    }
-
-    @Override
-    public void onMapReady(GoogleMap googleMap) {
-        try {
-            mGoogleMap = googleMap;
-            mGoogleMap.setMyLocationEnabled(true);
-        } catch (SecurityException e) {
-            e.printStackTrace();
-        }
-
-        // This code adds the listener and subscribes passenger to channel with driver's location.
-        LoginActivity.pubnub.addListener(new SubscribeCallback() {
-            @Override
-            public void status(PubNub pub, PNStatus status) {
-
-            }
-
-            @Override
-            public void message(PubNub pub, final PNMessageResult message) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            Map<String, String> newLocation = JsonUtil.fromJson(message.getMessage().toString(), LinkedHashMap.class);
-                            updateUI(newLocation);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                });
-            }
-
-            @Override
-            public void presence(PubNub pub, PNPresenceEventResult presence) {
-
-            }
-        });
-        LoginActivity.pubnub.subscribe()
-                .channels(Arrays.asList(Constants.PUBNUB_CHANNEL_NAME)) // subscribe to channels
-                .execute();
-
-    }
 
 
     /**
@@ -186,12 +137,73 @@ public class LocationFragment extends Fragment implements OnMapReadyCallback{
         // TODO: Update argument type and name
         void onFragmentInteraction(Uri uri);
     }
+    /*
+         This method is called when the map is completely set up. After the map is setup,
+         the passenger will be subscribed to the driver's location channel, so their location
+         can be updated on the MapView. We use the reference to the GoogleMap object googleMap
+         to utilize any Google Maps API features.
+      */
+     /*
+        This method is called when the map is completely set up. After the map is setup,
+        the passenger will be subscribed to the driver's location channel, so their location
+        can be updated on the MapView. We use the reference to the GoogleMap object googleMap
+        to utilize any Google Maps API features.
+     */
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        mGoogleMap = googleMap;
+        Bitmap bMap = BitmapFactory.decodeResource(getResources(), R.drawable.kid);
+        Bitmap resized = CropCircleUtil.resizeImage(bMap, 50, 50);
+        LatLng location = new LatLng(Double.valueOf(minorLocation.getLatitude()), Double.valueOf(minorLocation.getLongitude()));
+        mGoogleMap.addMarker(new MarkerOptions().position(location).title("Minor location").icon(BitmapDescriptorFactory.fromBitmap(CropCircleUtil.getCroppedBitmap(resized))));
+        mGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(location));
+        mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(location, 15));
+
+//        try {
+//            mGoogleMap = googleMap;
+//            mGoogleMap.setMyLocationEnabled(false);
+//        } catch (SecurityException e) {
+//            e.printStackTrace();
+//        }
+//
+//        // This code adds the listener and subscribes passenger to channel with driver's location.
+//        LoginActivity.pubnub.addListener(new SubscribeCallback() {
+//            @Override
+//            public void status(PubNub pub, PNStatus status) {
+//
+//            }
+//
+//            @Override
+//            public void message(PubNub pub, final PNMessageResult message) {
+//                runOnUiThread(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        try {
+//                            Map<String, String> newLocation = JsonUtil.fromJson(message.getMessage().toString(), LinkedHashMap.class);
+//                            updateUI(newLocation);
+//                        } catch (Exception e) {
+//                            e.printStackTrace();
+//                        }
+//                    }
+//                });
+//            }
+//
+//            @Override
+//            public void presence(PubNub pub, PNPresenceEventResult presence) {
+//
+//            }
+//        });
+//        LoginActivity.pubnub.subscribe()
+//                .channels(Arrays.asList(Constants.PUBNUB_CHANNEL_NAME)) // subscribe to channels
+//                .execute();
+
+    }
 
     /*
-    This method gets the new location of driver and calls method animateCar
-    to move the marker slowly along linear path to this location.
-    Also moves camera, if marker is outside of map bounds.
- */
+        This method gets the new location of driver and calls method animateCar
+        to move the marker slowly along linear path to this location.
+        Also moves camera, if marker is outside of map bounds.
+     */
     private void updateUI(Map<String, String> newLoc) {
         LatLng newLocation = new LatLng(Double.valueOf(newLoc.get("lat")), Double.valueOf(newLoc.get("lng")));
         if (driverMarker != null) {
@@ -206,11 +218,10 @@ public class LocationFragment extends Fragment implements OnMapReadyCallback{
         } else {
             mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(
                     newLocation, 15.5f));
-            driverMarker = mGoogleMap.addMarker(new MarkerOptions().position(newLocation).
-                    icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_airport_emergency_black_24dp)));
+            driverMarker = mGoogleMap.addMarker(new MarkerOptions().position(newLocation).title("Test").
+                    icon(BitmapDescriptorFactory.fromResource(R.drawable.car)));
         }
     }
-
 
     /*
         Animates car by moving it by fractions of the full path and finally moving it to its
@@ -245,10 +256,10 @@ public class LocationFragment extends Fragment implements OnMapReadyCallback{
     }
 
     /*
-     This interface defines the interpolate method that allows us to get LatLng coordinates for
-     a location a fraction of the way between two points. It also utilizes a Linear method, so
-     that paths are linear, as they should be in most streets.
-  */
+        This interface defines the interpolate method that allows us to get LatLng coordinates for
+        a location a fraction of the way between two points. It also utilizes a Linear method, so
+        that paths are linear, as they should be in most streets.
+     */
     private interface LatLngInterpolator {
         LatLng interpolate(float fraction, LatLng a, LatLng b);
 

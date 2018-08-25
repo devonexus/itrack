@@ -20,6 +20,7 @@ import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.example.admin.itrack.models.Users;
+import com.example.admin.itrack.utils.ApiUrl;
 import com.example.admin.itrack.utils.Constants;
 import com.example.admin.itrack.utils.CustomJSONRequest;
 import com.example.admin.itrack.utils.VolleySingleton;
@@ -45,11 +46,6 @@ public class LoginActivity extends AppCompatActivity {
     private static final String userId = "userId";
     private static final String usertype = "usertype";
     private ProgressDialog pDialog;
-    //private static final String WEB_API_LOGIN_URL = "http://192.168.1.136:8080/android/login.php";
-    private static final String WEB_API_LOGIN_URL = "http://192.168.254.159:8080/android/login.php";
-
-//    private static final String WEB_API_LOGIN_URL = "http://cel.x10host.com/android/login.php";
-
     private String enteredUsername, enteredPassword;
     private TextInputEditText etUsername, etPassword;
     public static Users userInstance;
@@ -90,7 +86,7 @@ public class LoginActivity extends AppCompatActivity {
 
     private void loginUser(final String user_name, final String user_pword){
         showpDialog();
-        CustomJSONRequest customJSONRequest = new CustomJSONRequest(Request.Method.POST, WEB_API_LOGIN_URL, null,
+        CustomJSONRequest customJSONRequest = new CustomJSONRequest(Request.Method.POST, ApiUrl.WEB_API_LOGIN_URL, null,
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(final JSONObject response) {

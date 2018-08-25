@@ -28,6 +28,7 @@ import com.bumptech.glide.request.RequestOptions;
 import com.example.admin.itrack.fragment.HomeFragment;
 import com.example.admin.itrack.fragment.LocationFragment;
 import com.example.admin.itrack.fragment.Notifications;
+import com.example.admin.itrack.fragment.TableParentAssignFragment;
 import com.example.admin.itrack.models.Users;
 import com.mikepenz.fontawesome_typeface_library.FontAwesome;
 import com.mikepenz.iconics.IconicsDrawable;
@@ -111,37 +112,76 @@ public class NavigationDrawerActivity extends AppCompatActivity{
         setDrawerItemLook();
     }
     private void setDrawerItemLook(){
+
+
         menu = navigationView.getMenu();
-        navHome = menu.findItem(R.id.nav_home);
-        navHome.setIcon(new IconicsDrawable(this)
-                .icon(FontAwesome.Icon.faw_home)
-                .color(Color.RED)
-                .sizeDp(24));
+        if(userInstance.getUsertype().toString().equals("Parent")){
 
-        navLocation = menu.findItem(R.id.nav_location);
-        navLocation.setIcon(new IconicsDrawable(this)
-                .icon(FontAwesome.Icon.faw_globe)
-                .color(Color.RED)
-                .sizeDp(24));
+            navHome = menu.findItem(R.id.nav_home);
+            navHome.setIcon(new IconicsDrawable(this)
+                    .icon(FontAwesome.Icon.faw_home)
+                    .color(Color.RED)
+                    .sizeDp(24));
 
-        navAnnouncement = menu.findItem(R.id.nav_announcement);
-        navAnnouncement.setIcon(new IconicsDrawable(this)
-                .icon(FontAwesome.Icon.faw_bullhorn)
-                .color(Color.RED)
-                .sizeDp(24));
+            navLocation = menu.findItem(R.id.nav_location);
+            navLocation.setIcon(new IconicsDrawable(this)
+                    .icon(FontAwesome.Icon.faw_globe)
+                    .color(Color.RED)
+                    .sizeDp(24));
 
-        navNotification = menu.findItem(R.id.nav_notifications);
-        navNotification.setIcon(new IconicsDrawable(this)
-                .icon(FontAwesome.Icon.faw_bell)
-                .color(Color.RED)
-                .sizeDp(24));
+            navAnnouncement = menu.findItem(R.id.nav_announcement);
+            navAnnouncement.setIcon(new IconicsDrawable(this)
+                    .icon(FontAwesome.Icon.faw_bullhorn)
+                    .color(Color.RED)
+                    .sizeDp(24));
+
+            navNotification = menu.findItem(R.id.nav_notifications);
+            navNotification.setIcon(new IconicsDrawable(this)
+                    .icon(FontAwesome.Icon.faw_bell)
+                    .color(Color.RED)
+                    .sizeDp(24));
 
 
-        navLogout = menu.findItem(R.id.nav_logout);
-        navLogout.setIcon(new IconicsDrawable(this)
+            navLogout = menu.findItem(R.id.nav_logout);
+            navLogout.setIcon(new IconicsDrawable(this)
                     .icon(FontAwesome.Icon.faw_sign_out_alt)
                     .color(Color.RED)
                     .sizeDp(24));
+        }else{
+
+            navHome = menu.findItem(R.id.nav_home);
+            navHome.setIcon(new IconicsDrawable(this)
+                    .icon(FontAwesome.Icon.faw_home)
+                    .color(Color.RED)
+                    .sizeDp(24));
+
+            navLocation = menu.findItem(R.id.nav_location);
+//            navLocation.setIcon(new IconicsDrawable(this)
+//                    .icon(FontAwesome.Icon.faw_globe)
+//                    .color(Color.RED)
+//                    .sizeDp(24));
+            navLocation.setVisible(false);
+            navAnnouncement = menu.findItem(R.id.nav_announcement);
+            navAnnouncement.setIcon(new IconicsDrawable(this)
+                    .icon(FontAwesome.Icon.faw_bullhorn)
+                    .color(Color.RED)
+                    .sizeDp(24));
+
+            navNotification = menu.findItem(R.id.nav_notifications);
+            navNotification.setIcon(new IconicsDrawable(this)
+                    .icon(FontAwesome.Icon.faw_bell)
+                    .color(Color.RED)
+                    .sizeDp(24));
+
+
+            navLogout = menu.findItem(R.id.nav_logout);
+            navLogout.setIcon(new IconicsDrawable(this)
+                    .icon(FontAwesome.Icon.faw_sign_out_alt)
+                    .color(Color.RED)
+                    .sizeDp(24));
+        }
+
+
 
         initializeProgressDialogState();
     }
@@ -171,7 +211,7 @@ public class NavigationDrawerActivity extends AppCompatActivity{
     }
 
     private void setUpNavigationView() {
-        //Setting Navigation View Item Selected Listener to handle the item click of the navigation menu
+        //Setting Navigation View Item S;elected Listener to handle the item click of the navigation menu
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
 
             // This method will trigger on item Click of navigation menu
@@ -323,7 +363,7 @@ public class NavigationDrawerActivity extends AppCompatActivity{
                 return homeFragment;
             case 1:
                 // location
-                LocationFragment locationFragment = new LocationFragment();
+                TableParentAssignFragment locationFragment = new TableParentAssignFragment();
                 return locationFragment;
             case 2:
                 // notifications fragment
