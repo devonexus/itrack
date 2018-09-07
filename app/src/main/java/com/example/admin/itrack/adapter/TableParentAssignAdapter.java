@@ -27,6 +27,7 @@ import com.example.admin.itrack.utils.ApiUrl;
 import com.example.admin.itrack.utils.CustomJSONRequest;
 import com.example.admin.itrack.utils.KeyConfig;
 import com.example.admin.itrack.utils.VolleySingleton;
+import com.google.gson.JsonArray;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -86,34 +87,36 @@ public class TableParentAssignAdapter extends RecyclerView.Adapter<TableParentAs
         holder.track_location.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(final View view) {
+             //   Toast.makeText(context, "Parent ID: "+users.getUserId()+"\n Minor ID: "+tableParentAssign.getMinor_id(), Toast.LENGTH_SHORT).show();
                 //fetchUserLocation(String.valueOf(users.getUserId()), tableParentAssign.getMinor_id());
                 showpDialog();
                 CustomJSONRequest stopDeploymentRequest  = new CustomJSONRequest(Request.Method.POST, ApiUrl.TABLE_MINOR_LOCATION, null,
                         new Response.Listener<JSONObject>(){
                             @Override
                             public void onResponse(JSONObject response) {
-                                try {
 
+
+                                try {
                                     if(response.getString(KeyConfig.read_status).equals("1")){
                                         minorLocation.setLatitude(response.getString(KeyConfig.latitude));
                                         minorLocation.setLongitude(response.getString(KeyConfig.longitude));
+                                        users.setMinorFullName(tableParentAssign.getMinorFullName());
                                         hidepDialog();
                                         ((FragmentActivity) view.getContext()).getSupportFragmentManager().beginTransaction()
                                                 .replace(R.id.table_parent_assign_container, new LocationFragment())
                                                 .commit();
-                                    }else if(response.getString(KeyConfig.read_status).equals("0")){
-                                        Toast.makeText(context, "Minor has turned off his/her location.", Toast.LENGTH_LONG).show();
-                                        hidepDialog();
                                     }
                                 } catch (JSONException e) {
                                     e.printStackTrace();
                                 }
+
                             }
                         }, new Response.ErrorListener(){
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         error.printStackTrace();
                         hidepDialog();
+                        Toast.makeText(context, "Used has turned off his / her location...", Toast.LENGTH_SHORT).show();
                     }
                 }){
 

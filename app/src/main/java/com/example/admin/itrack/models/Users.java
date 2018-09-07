@@ -7,7 +7,7 @@ public class Users {
     private String fullname;
     private String image;
     private String usertype;
-
+    private String minorFullName;
     public String getImage() {
         return image;
     }
@@ -68,5 +68,14 @@ public class Users {
 
     public void setUsertype(String usertype) {
         this.usertype = usertype;
+    }
+
+
+    public String getMinorFullName() {
+        return minorFullName;
+    }
+
+    public void setMinorFullName(String minorFullName) {
+        this.minorFullName = minorFullName;
     }
 }

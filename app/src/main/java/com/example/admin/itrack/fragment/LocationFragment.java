@@ -15,9 +15,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.LinearInterpolator;
+import android.widget.Toast;
 
 import com.example.admin.itrack.R;
 import com.example.admin.itrack.models.MinorLocation;
+import com.example.admin.itrack.models.TableParentAssign;
+import com.example.admin.itrack.models.Users;
 import com.example.admin.itrack.utils.CropCircleUtil;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -48,11 +51,10 @@ public class LocationFragment extends Fragment implements OnMapReadyCallback{
     private GoogleMap mGoogleMap; // object that represents googleMap and allows us to use Google Maps API features
 
     private Marker driverMarker; // Marker to display driver's location
-
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
-
+    public static Users users;
     private OnFragmentInteractionListener mListener;
 
     public LocationFragment() {
@@ -92,6 +94,7 @@ public class LocationFragment extends Fragment implements OnMapReadyCallback{
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         minorLocation = MinorLocation.getInstance();
+        users = Users.getInstance();
         View view = inflater.inflate(R.layout.fragment_location, container, false);
         mMapFragment = (SupportMapFragment) getChildFragmentManager()
                 .findFragmentById(R.id.map);
@@ -153,9 +156,9 @@ public class LocationFragment extends Fragment implements OnMapReadyCallback{
     public void onMapReady(GoogleMap googleMap) {
         mGoogleMap = googleMap;
         Bitmap bMap = BitmapFactory.decodeResource(getResources(), R.drawable.kid);
-        Bitmap resized = CropCircleUtil.resizeImage(bMap, 50, 50);
+        Bitmap resized = CropCircleUtil.resizeImage(bMap, 100, 100);
         LatLng location = new LatLng(Double.valueOf(minorLocation.getLatitude()), Double.valueOf(minorLocation.getLongitude()));
-        mGoogleMap.addMarker(new MarkerOptions().position(location).title("Minor location").icon(BitmapDescriptorFactory.fromBitmap(CropCircleUtil.getCroppedBitmap(resized))));
+        mGoogleMap.addMarker(new MarkerOptions().position(location).title(users.getMinorFullName()).icon(BitmapDescriptorFactory.fromBitmap(CropCircleUtil.getCroppedBitmap(resized))));
         mGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(location));
         mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(location, 15));
 

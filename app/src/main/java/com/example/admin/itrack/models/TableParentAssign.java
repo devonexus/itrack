@@ -11,6 +11,15 @@ public class TableParentAssign {
     private String notification_date;
     private String parent_id;
     private String minor_id;
+    public static TableParentAssign tableParentAssign;
+
+    public static TableParentAssign getInstance(){
+        if(tableParentAssign == null){
+            return tableParentAssign = new TableParentAssign();
+        }
+        return tableParentAssign;
+    }
+
 
     public String getMinorFullName() {
         return minorFullName;

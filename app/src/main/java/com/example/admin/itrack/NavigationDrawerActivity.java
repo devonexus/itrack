@@ -8,6 +8,7 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
@@ -22,7 +23,12 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.example.admin.itrack.fragment.HomeFragment;
@@ -30,10 +36,20 @@ import com.example.admin.itrack.fragment.LocationFragment;
 import com.example.admin.itrack.fragment.Notifications;
 import com.example.admin.itrack.fragment.TableParentAssignFragment;
 import com.example.admin.itrack.models.Users;
+import com.example.admin.itrack.utils.ApiUrl;
+import com.example.admin.itrack.utils.CustomJSONRequest;
+import com.example.admin.itrack.utils.KeyConfig;
+import com.example.admin.itrack.utils.VolleySingleton;
 import com.mikepenz.fontawesome_typeface_library.FontAwesome;
 import com.mikepenz.iconics.IconicsDrawable;
 import com.mikepenz.iconics.context.IconicsContextWrapper;
 import com.mikepenz.iconics.context.IconicsLayoutInflater2;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions.withCrossFade;
 
@@ -67,6 +83,7 @@ public class NavigationDrawerActivity extends AppCompatActivity{
     private boolean shouldLoadHomeFragOnBackPress = true;
     private Handler mHandler;
     //Enumerate drawer item
+    private FloatingActionButton fab;
     private MenuItem navHome, navLocation, navNotification, navAnnouncement, navLogout;
     @Override
     protected void attachBaseContext(Context newBase) {
@@ -93,7 +110,8 @@ public class NavigationDrawerActivity extends AppCompatActivity{
         txtWebsite =  navHeader.findViewById(R.id.website);
         imgNavHeaderBg =  navHeader.findViewById(R.id.img_header_bg);
         imgProfile =  navHeader.findViewById(R.id.img_profile);
-
+        fab             =  findViewById(R.id.fab);
+        fab.setVisibility(View.GONE);
         // load toolbar titles from string resources
         activityTitles = getResources().getStringArray(R.array.nav_item_activity_titles);
 
@@ -439,6 +457,11 @@ public class NavigationDrawerActivity extends AppCompatActivity{
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
+                                if(userInstance.getUsertype().equals("Minor")){
+                                    updateLocation(userInstance.getUserId());
+                                }
+
+
                                 Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
                                 intent.putExtra("LOGIN_STATUS", false);
                                 intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP |
@@ -476,6 +499,43 @@ public class NavigationDrawerActivity extends AppCompatActivity{
 
     private void signOut() {
         showMessage("Logout", "Are you sure you want to logout?");
+    }
+
+
+    private void updateLocation(final int minorId ){
+        showpDialog();
+        CustomJSONRequest customJSONRequest = new CustomJSONRequest(Request.Method.POST, ApiUrl.TABLE_MINOR_LOCATION, null, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                try {
+                    if(response.getString(KeyConfig.RESULT).equals("1")){
+                        hidepDialog();
+
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    hidepDialog();
+
+                } catch (NullPointerException e){
+                    e.printStackTrace();
+                }
+            }
+        }, new Response.ErrorListener(){
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                error.printStackTrace();
+            }
+        }){
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Map<String, String> params = new HashMap<String, String>();
+                params.put(KeyConfig.minor_id, String.valueOf(minorId));
+
+                return params;
+            }
+        };
+        VolleySingleton.getInstance(getApplicationContext()).addToRequestQueue(customJSONRequest);
     }
 
 }
