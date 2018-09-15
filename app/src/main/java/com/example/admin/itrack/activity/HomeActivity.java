@@ -1,4 +1,4 @@
-package com.example.admin.itrack.fragment;
+package com.example.admin.itrack.activity;
 
 import android.Manifest;
 import android.app.Activity;
@@ -10,12 +10,13 @@ import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
-import android.location.LocationManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Looper;
-import android.provider.Settings;
+import android.provider.Telephony;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
@@ -23,9 +24,7 @@ import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -37,7 +36,8 @@ import com.example.admin.itrack.AnnouncementActivity;
 import com.example.admin.itrack.LoginActivity;
 import com.example.admin.itrack.NavigationDrawerActivity;
 import com.example.admin.itrack.R;
-import com.example.admin.itrack.models.Announcement;
+import com.example.admin.itrack.fragment.TableParentAssignFragment;
+import com.example.admin.itrack.models.TableParentAssign;
 import com.example.admin.itrack.models.Users;
 import com.example.admin.itrack.utils.ApiUrl;
 import com.example.admin.itrack.utils.Constants;
@@ -58,13 +58,6 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
-import com.karumi.dexter.Dexter;
-import com.karumi.dexter.MultiplePermissionsReport;
-import com.karumi.dexter.PermissionToken;
-import com.karumi.dexter.listener.DexterError;
-import com.karumi.dexter.listener.PermissionRequest;
-import com.karumi.dexter.listener.PermissionRequestErrorListener;
-import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
 import com.mikepenz.fontawesome_typeface_library.FontAwesome;
 import com.mikepenz.iconics.IconicsDrawable;
 import com.pubnub.api.callbacks.PNCallback;
@@ -76,38 +69,18 @@ import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
-/**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link HomeFragment.OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link HomeFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
-public class HomeFragment extends Fragment implements LocationListener, GoogleApiClient.ConnectionCallbacks,
+public class HomeActivity extends NavigationDrawerActivity implements LocationListener, GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener, ResultCallback<LocationSettingsResult> {
-    LocationManager locationManager;
-
-    /**
-     * Tracks the status of the location updates request. Value changes when the user presses the
-     * Start Updates and Stop Updates buttons.
-     */
-    private LocationSettingsRequest.Builder builder;
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
+    
     private FusedLocationProviderClient mFusedLocationClient; // Object used to receive location updates
     private LocationRequest locationRequest; // Object that defines important parameters regarding location request.
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
     private GoogleApiClient googleApiClient;
-    private OnFragmentInteractionListener mListener;
-    private ImageView img_location, imgAnnouncement;
+    private ImageView img_location, imgAnnouncement, imgEmergency, imgSms;
     public static Users users;
     private TextView txt_location;
     private static final String TAG = "HomeFragment";
@@ -128,65 +101,21 @@ public class HomeFragment extends Fragment implements LocationListener, GoogleAp
      */
     private String lat, lng;
     protected LocationRequest mLocationRequest;
-    public HomeFragment() {
-        // Required empty public constructor
-    }
-
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment HomeFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static HomeFragment newInstance(String param1, String param2) {
-        HomeFragment fragment = new HomeFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
-
-    protected void createLocationRequest() {
-        mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(10000);
-        mLocationRequest.setFastestInterval(5000);
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-    }
-
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
+        LayoutInflater inflater = (LayoutInflater) this
+                .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        View contentView = inflater.inflate(R.layout.activity_home, null, false);
+        drawer.addView(contentView, 0);
         users = Users.getInstance();
         initializeProgressDialog();
-//        if(users.getUsertype().toString().equals("Minor")){
-//
-//
-//        }else if(users.getUsertype().toString().equals("Parent")){
-//            Toast.makeText(getContext(), "Test", Toast.LENGTH_SHORT).show();
-//        }
-    }
-
-
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-
-
-        final View rootLayout = inflater.inflate(R.layout.fragment_home, container, false);
-        img_location = rootLayout.findViewById(R.id.img_location);
-        imgAnnouncement = rootLayout.findViewById(R.id.img_announcement);
-        txt_location = rootLayout.findViewById(R.id.txt_location);
-        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(getActivity().getApplicationContext());
+        img_location = findViewById(R.id.img_location);
+        imgAnnouncement = findViewById(R.id.img_announcement);
+        txt_location = findViewById(R.id.txt_location);
+        imgEmergency = findViewById(R.id.imgEmergency);
+        imgSms = findViewById(R.id.imgSms);
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(getApplicationContext());
         if (users.getUsertype().toString().equals("Parent")) {
             img_location.setImageResource(R.drawable.ic_location_on_black_24dp);
             txt_location.setText(getResources().getString(R.string.track_minor));
@@ -194,36 +123,75 @@ public class HomeFragment extends Fragment implements LocationListener, GoogleAp
                 @Override
                 public void onClick(View view) {
 
-                    Fragment locationFragment = new TableParentAssignFragment();
-                    FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
-                    fragmentTransaction.replace(R.id.fragment_home_container, locationFragment);
-                    fragmentTransaction.addToBackStack(null);
-                    fragmentTransaction.commit();
-
-
+//                    Fragment locationFragment = new TableParentAssignFragment();
+//                    locationFragment.getActivity().setTitle("Location");
+//                    FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
+//                    //fragmentTransaction.replace(R.id.activity_home_container, locationFragment);
+////                    fragmentTransaction.replace(null, locationFragment);
+//                    fragmentTransaction.addToBackStack(null);
+//                    fragmentTransaction.commit();
+//                    String KEY_ID = "1";
+//                    String id = getIntent().getStringExtra(KEY_ID);
+//                    TableParentAssignFragment tableParentAssignFragment = TableParentAssignFragment.newInstance(id);
+                    Intent intent = new Intent(getApplicationContext(), TableParentAssignActivity.class);
+                    intent .putExtra("openF2",true);
+                    overridePendingTransition(0, 0);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                    finish();
+                    startActivity(intent);
+                }
+            });
+            imgEmergency.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    startActivity(new Intent(getApplicationContext(), EmergencyActivity.class));
                 }
             });
             imgAnnouncement.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    rootLayout.setVisibility(View.GONE);
-                    Intent intent = new Intent();
-                    intent.setClass(getActivity(), AnnouncementActivity.class);
-                    getActivity().startActivity(intent);
+
+                    startActivity(new Intent(getApplicationContext(), AnnouncementActivity.class));
                 }
             });
-
+            imgSms.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    sendSMS();
+                }
+            });
 //            txt_location
         } else if (users.getUsertype().toString().equals("Minor")) {
             img_location.setImageResource(R.drawable.ic_my_location_black_24dp);
             txt_location.setText(getResources().getString(R.string.publish_location));
             createLocationRequest();
-            mGoogleApiClient = new GoogleApiClient.Builder(getContext())
+            mGoogleApiClient = new GoogleApiClient.Builder(getApplicationContext())
                     .addApi(LocationServices.API)
                     .addConnectionCallbacks(this)
                     .addOnConnectionFailedListener(this)
                     .build();
             buildLocationSettingsRequest();
+            imgEmergency.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    startActivity(new Intent(getApplicationContext(), EmergencyActivity.class));
+                }
+            });
+
+            imgAnnouncement.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+
+                    startActivity(new Intent(getApplicationContext(), AnnouncementActivity.class));
+                }
+            });
+
+            imgSms.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    sendSMS();
+                }
+            });
             img_location.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
@@ -241,115 +209,40 @@ public class HomeFragment extends Fragment implements LocationListener, GoogleAp
                 }
             });
         }
-
-        return rootLayout;
     }
 
-    /**
-     * Requesting multiple permissions (storage and location) at once
-     * This uses multiple permission model from dexter
-     * On permanent denial opens settings dialog
-     */
-    private void requestStoragePermission() {
-        Dexter.withActivity(getActivity())
-                .withPermissions(
-                        Manifest.permission.READ_EXTERNAL_STORAGE,
-                        Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                        Manifest.permission.ACCESS_FINE_LOCATION)
-                .withListener(new MultiplePermissionsListener() {
-                    @Override
-                    public void onPermissionsChecked(MultiplePermissionsReport report) {
-                        // check if all permissions are granted
-                        if (report.areAllPermissionsGranted()) {
-                            //Toast.makeText(getContext(), "All permissions are granted!", Toast.LENGTH_SHORT).show();
-//                            LocationManager mlocManager = (LocationManager) getContext().getSystemService(Context.LOCATION_SERVICE);
-//                            boolean enabled = mlocManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
-//
-//                            if(!enabled) {
-//                                showDialogGPS();
-//                            }
 
-                        }
+    private void sendSMS() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) // At least KitKat
+        {
+            String defaultSmsPackageName = Telephony.Sms.getDefaultSmsPackage(this); // Need to change the build to API 19
 
-                        // check for permanent denial of any permission
-                        if (report.isAnyPermissionPermanentlyDenied()) {
-                            // show alert dialog navigating to Settings
-                            showSettingsDialog();
-                        }
-                    }
+            Intent sendIntent = new Intent(Intent.ACTION_SEND);
+            sendIntent.setType("text/plain");
+            sendIntent.putExtra(Intent.EXTRA_TEXT, "text");
 
-                    @Override
-                    public void onPermissionRationaleShouldBeShown(List<PermissionRequest> permissions, PermissionToken token) {
-                        token.continuePermissionRequest();
-                    }
-                }).
-                withErrorListener(new PermissionRequestErrorListener() {
-                    @Override
-                    public void onError(DexterError error) {
-                        Toast.makeText(getContext(), "Error occurred! ", Toast.LENGTH_SHORT).show();
-                    }
-                })
-                .onSameThread()
-                .check();
-    }
-
-    /**
-     * Showing Alert Dialog with Settings option
-     * Navigates user to app settings
-     * NOTE: Keep proper title and message depending on your app
-     */
-    private void showSettingsDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-        builder.setTitle("Need Permissions");
-        builder.setMessage("This app needs permission to use this feature. You can grant them in app settings.");
-        builder.setPositiveButton("GOTO SETTINGS", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.cancel();
-                openSettings();
+            if (defaultSmsPackageName != null)// Can be null in case that there is no default, then the user would be able to choose
+            // any app that support this intent.
+            {
+                sendIntent.setPackage(defaultSmsPackageName);
             }
-        });
-        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.cancel();
-            }
-        });
-        builder.show();
+            startActivity(sendIntent);
 
-    }
-
-    // navigating user to app settings
-    private void openSettings() {
-        Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-        Uri uri = Uri.fromParts("package", getContext().getPackageName(), null);
-        intent.setData(uri);
-        startActivityForResult(intent, 101);
-    }
-
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
+        }
+        else // For early versions, do what worked for you before.
+        {
+            Intent smsIntent = new Intent(android.content.Intent.ACTION_VIEW);
+            smsIntent.setType("vnd.android-dir/mms-sms");
+            smsIntent.putExtra("address","phoneNumber");
+            smsIntent.putExtra("sms_body","message");
+            startActivity(smsIntent);
         }
     }
-
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if (context instanceof OnFragmentInteractionListener) {
-            mListener = (OnFragmentInteractionListener) context;
-        }
-//        else {
-//            throw new RuntimeException(context.toString()
-//                    + " must implement OnFragmentInteractionListener");
-//        }
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        mListener = null;
+    protected void createLocationRequest() {
+        mLocationRequest = new LocationRequest();
+        mLocationRequest.setInterval(10000);
+        mLocationRequest.setFastestInterval(5000);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
     }
 
     @Override
@@ -367,7 +260,7 @@ public class HomeFragment extends Fragment implements LocationListener, GoogleAp
                 try {
                     // Show the dialog by calling startResolutionForResult(), and check the result
                     // in onActivityResult().
-                    status.startResolutionForResult(getActivity(), REQUEST_CHECK_SETTINGS);
+                    status.startResolutionForResult((HomeActivity) getApplicationContext(), REQUEST_CHECK_SETTINGS);
                 } catch (IntentSender.SendIntentException e) {
                     Log.i(TAG, "PendingIntent unable to execute request.");
                 }
@@ -412,13 +305,13 @@ public class HomeFragment extends Fragment implements LocationListener, GoogleAp
                                     // handle publish result, status always present, result if successful
                                     // status.isError() to see if error happened
                                     if (!status.isError()) {
-                                        Toast.makeText(getActivity(), "Successful pubnub instance", Toast.LENGTH_SHORT).show();
+                                        Toast.makeText(getApplicationContext(), "Successful pubnub instance", Toast.LENGTH_SHORT).show();
 
                                         //System.out.println("pub timetoken: " + result.getTimetoken());
                                     } else {
 
                                         System.out.println("pub status code: " + status.getStatusCode());
-                                        Toast.makeText(getActivity(), "Result: " + status.getStatusCode() + " Error data here", Toast.LENGTH_SHORT).show();
+                                        Toast.makeText(getApplicationContext(), "Result: " + status.getStatusCode() + " Error data here", Toast.LENGTH_SHORT).show();
                                     }
 
                                 }
@@ -447,7 +340,7 @@ public class HomeFragment extends Fragment implements LocationListener, GoogleAp
      * Show a dialog to the user requesting that GPS be enabled
      */
     private void showDialogGPS() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        AlertDialog.Builder builder = new AlertDialog.Builder(HomeActivity.this);
         builder.setCancelable(false);
         builder.setTitle("Enable GPS");
         builder.setMessage("Please enable GPS");
@@ -467,27 +360,6 @@ public class HomeFragment extends Fragment implements LocationListener, GoogleAp
         alert.show();
     }
 
-//
-//    @Override
-//    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-//        switch (requestCode) {
-//            // Check for the integer request code originally supplied to startResolutionForResult().
-//            case REQUEST_CHECK_SETTINGS:
-//                switch (resultCode) {
-//                    case Activity.RESULT_OK:
-//                        Toast.makeText(getContext(), "User agreed to make required location settings changes", Toast.LENGTH_SHORT).show();
-//                        Log.i(TAG, "User agreed to make required location settings changes.");
-//                        startLocationUpdates();
-//                        break;
-//                    case Activity.RESULT_CANCELED:
-//                        Toast.makeText(getContext(), "User chose not to make required location settings changes", Toast.LENGTH_SHORT).show();
-//
-//                        Log.i(TAG, "User chose not to make required location settings changes.");
-//                        break;
-//                }
-//                break;
-//        }
-//    }
 
 
     @Override
@@ -530,7 +402,7 @@ public class HomeFragment extends Fragment implements LocationListener, GoogleAp
                 switch (status.getStatusCode()) {
                     case LocationSettingsStatusCodes.SUCCESS:
                         Log.i(TAG, "All location settings are satisfied.");
-                        Toast.makeText(getContext(), "SUCCESS", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), "SUCCESS", Toast.LENGTH_SHORT).show();
                         startLocationUpdates();
                         break;
                     case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
@@ -539,8 +411,8 @@ public class HomeFragment extends Fragment implements LocationListener, GoogleAp
                         try {
                             // Show the dialog by calling startResolutionForResult(), and check the result
                             // in onActivityResult().
-                            Toast.makeText(getContext(), "RESOLUTION REQUIRED", Toast.LENGTH_SHORT).show();
-                            status.startResolutionForResult(getActivity(), REQUEST_CHECK_SETTINGS);
+                            Toast.makeText(getApplicationContext(), "RESOLUTION REQUIRED", Toast.LENGTH_SHORT).show();
+                            status.startResolutionForResult((HomeActivity) getApplicationContext(), REQUEST_CHECK_SETTINGS);
                         } catch (IntentSender.SendIntentException e) {
                             Log.i(TAG, "PendingIntent unable to execute request.");
                         }
@@ -607,29 +479,12 @@ public class HomeFragment extends Fragment implements LocationListener, GoogleAp
     }
 
 
-//    protected void startLocationUpdates() {
-//
-//
-//        if (ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-//            // TODO: Consider calling
-//            //    ActivityCompat#requestPermissions
-//            // here to request the missing permissions, and then overriding
-//            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-//            //                                          int[] grantResults)
-//            // to handle the case where the user grants the permission. See the documentation
-//            // for ActivityCompat#requestPermissions for more details.
-//            return;
-//        }
-//        PendingResult<Status> pendingResult = LocationServices.FusedLocationApi.requestLocationUpdates(
-//                mGoogleApiClient, mLocationRequest, this);
-//        Log.d(TAG, "Location update started ..............: ");
-//    }
 
     /**
      * Requests location updates from the FusedLocationApi.
      */
     protected void startLocationUpdates() {
-        if (ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
             // here to request the missing permissions, and then overriding
@@ -647,9 +502,9 @@ public class HomeFragment extends Fragment implements LocationListener, GoogleAp
         ).setResultCallback(new ResultCallback<Status>() {
             @Override
             public void onResult(Status status) {
-//                    mRequestingLocationUpdates = true;
+
                 updateUI();
-//                setButtonsEnabledState();
+
             }
         });
     }
@@ -694,12 +549,12 @@ public class HomeFragment extends Fragment implements LocationListener, GoogleAp
                 try {
                     if(response.getString(KeyConfig.RESULT).equals("1")){
                         hidepDialog();
-                        Toast.makeText(getContext(), "Location successfully published.", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), "Location successfully published.", Toast.LENGTH_SHORT).show();
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
                     hidepDialog();
-                    Toast.makeText(getContext(), "Can't fetch location, please try again...", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "Can't fetch location, please try again...", Toast.LENGTH_SHORT).show();
                 } catch (NullPointerException e){
                     e.printStackTrace();
                 }
@@ -721,7 +576,7 @@ public class HomeFragment extends Fragment implements LocationListener, GoogleAp
                 return params;
             }
         };
-        VolleySingleton.getInstance(getContext()).addToRequestQueue(customJSONRequest);
+        VolleySingleton.getInstance(getApplicationContext()).addToRequestQueue(customJSONRequest);
     }
 
     @Override
@@ -766,10 +621,10 @@ public class HomeFragment extends Fragment implements LocationListener, GoogleAp
 
 
     private void initializeProgressDialog(){
-        pDialog = new ProgressDialog(getContext());
+        pDialog = new ProgressDialog(HomeActivity.this);
         pDialog.setTitle("Location");
         pDialog.setMessage("Fetching current location...");
-        pDialog.setIcon(new IconicsDrawable(getContext()).icon(FontAwesome.Icon.faw_location_arrow).color(Color.BLUE).sizeDp(24));
+        pDialog.setIcon(new IconicsDrawable(getApplicationContext()).icon(FontAwesome.Icon.faw_location_arrow).color(Color.BLUE).sizeDp(24));
         pDialog.setCancelable(false);
         pDialog.setIndeterminate(true);
     }
@@ -783,4 +638,6 @@ public class HomeFragment extends Fragment implements LocationListener, GoogleAp
         if (pDialog.isShowing())
             pDialog.dismiss();
     }//Dismiss progressDialog
+
+    
 }

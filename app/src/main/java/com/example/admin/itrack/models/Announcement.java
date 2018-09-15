@@ -10,6 +10,15 @@ public class Announcement {
     private boolean isImportant;
     private boolean isRead;
     private int color = -1;
+    public static Announcement announcementInstance;
+
+
+    public static Announcement getInstance(){
+        if(announcementInstance == null) {
+            return announcementInstance = new Announcement();
+        }
+        return announcementInstance;
+    }
 
 
     public int getAnnouncementId() {

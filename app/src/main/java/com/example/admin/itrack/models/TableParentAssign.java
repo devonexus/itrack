@@ -11,6 +11,24 @@ public class TableParentAssign {
     private String notification_date;
     private String parent_id;
     private String minor_id;
+
+    public String getMinorImage() {
+        return minorImage;
+    }
+
+    public void setMinorImage(String minorImage) {
+        this.minorImage = minorImage;
+    }
+
+    public static TableParentAssign getTableParentAssign() {
+        return tableParentAssign;
+    }
+
+    public static void setTableParentAssign(TableParentAssign tableParentAssign) {
+        TableParentAssign.tableParentAssign = tableParentAssign;
+    }
+
+    private String minorImage;
     public static TableParentAssign tableParentAssign;
 
     public static TableParentAssign getInstance(){

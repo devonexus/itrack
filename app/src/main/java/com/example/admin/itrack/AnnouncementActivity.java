@@ -1,6 +1,7 @@
 package com.example.admin.itrack;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -25,9 +26,11 @@ import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
+import com.example.admin.itrack.activity.AnnouncementDetails;
 import com.example.admin.itrack.adapter.AnnouncementAdapter;
 import com.example.admin.itrack.helpers.DividerItemDecoration;
 import com.example.admin.itrack.models.Announcement;
+import com.example.admin.itrack.utils.ApiUrl;
 import com.example.admin.itrack.utils.VolleySingleton;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -45,7 +48,7 @@ public class AnnouncementActivity extends NavigationDrawerActivity implements Sw
     private SwipeRefreshLayout swipeRefreshLayout;
     private ActionModeCallBack actionModeCallback;
     private ActionMode actionMode;
-    private static final String ANNOUNCEMENT_URL = "http://192.168.1.136:8080/android/post_announcement.php";
+    public static Announcement announcementInstance;
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -57,7 +60,7 @@ public class AnnouncementActivity extends NavigationDrawerActivity implements Sw
         drawer.addView(contentView, 0);
         Toolbar toolbar = (Toolbar) findViewById(R.id.announcement_toolbar);
         setSupportActionBar(toolbar);
-        Toast.makeText(this, "V", Toast.LENGTH_SHORT).show();
+
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -66,21 +69,10 @@ public class AnnouncementActivity extends NavigationDrawerActivity implements Sw
                         .setAction("Action", null).show();
         }
         });
-
+        announcementInstance = Announcement.getInstance();
         recyclerView = (RecyclerView) findViewById(R.id.announcement_recycler_view);
         swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh_layout);
         swipeRefreshLayout.setOnRefreshListener(this);
-
-        mAdapter = new AnnouncementAdapter(this, announcementList, this);
-        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());
-        recyclerView.setLayoutManager(mLayoutManager);
-        recyclerView.setItemAnimator(new DefaultItemAnimator());
-        recyclerView.addItemDecoration(new DividerItemDecoration(this, LinearLayoutManager.VERTICAL));
-        recyclerView.setAdapter(mAdapter);
-
-        actionModeCallback = new ActionModeCallBack();
-
-        // show loader and fetch messages
         swipeRefreshLayout.post(
                 new Runnable() {
                     @Override
@@ -89,14 +81,24 @@ public class AnnouncementActivity extends NavigationDrawerActivity implements Sw
                     }
                 }
         );
+        mAdapter = new AnnouncementAdapter(this, announcementList, this);
+        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());
+        recyclerView.setLayoutManager(mLayoutManager);
+        recyclerView.setItemAnimator(new DefaultItemAnimator());
+        recyclerView.addItemDecoration(new DividerItemDecoration(this, LinearLayoutManager.VERTICAL));
+        recyclerView.setAdapter(mAdapter);
+        actionModeCallback = new ActionModeCallBack();
+
+        // show loader and fetch messages
+
     }
     private void loadAnnouncement(){
         swipeRefreshLayout.setRefreshing(true);
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, ANNOUNCEMENT_URL,
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, ApiUrl.ANNOUNCEMENT_URL,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-//                        Toast.makeText(getApplicationContext(), ""+response.toString(), Toast.LENGTH_SHORT).show();
+
                         announcementList.clear();
                         List<Announcement> items = new Gson().fromJson(response.toString(), new TypeToken<List<Announcement>>() {
 
@@ -185,8 +187,9 @@ public class AnnouncementActivity extends NavigationDrawerActivity implements Sw
             message.setRead(true);
             announcementList.set(position, message);
             mAdapter.notifyDataSetChanged();
-
-            Toast.makeText(getApplicationContext(), "Read: " + message.getAnnoucementDescription(), Toast.LENGTH_SHORT).show();
+            announcementInstance.setAnnouncementId(message.getAnnouncementId());
+            startActivity(new Intent(getApplicationContext(), AnnouncementDetails.class));
+            //Toast.makeText(getApplicationContext(), "Read: " + message.getAnnoucementDescription(), Toast.LENGTH_SHORT).show();
         }
     }
 

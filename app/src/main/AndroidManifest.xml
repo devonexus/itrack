@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.admin.itrack">
+
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -19,24 +21,30 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".NavigationDrawerActivity">
+        <activity
+            android:name=".NavigationDrawerActivity"
+            android:theme="@style/AppTheme" />
+        <activity
+            android:name=".AnnouncementActivity"
+            android:label="@string/nav_announcement"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".activity.HomeActivity"
+            android:label="Home" />
+        <activity
+            android:name=".activity.TableParentAssignActivity"
+            android:label="Location" />
 
-        </activity>
-
-        <activity android:name=".AnnouncementActivity"
-            android:theme="@style/AppTheme.NoActionBar"
-            android:label="@string/nav_announcement">
-
-        </activity>
-        <activity android:name=".HomeActivity">
-
-        </activity>
         <meta-data
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="@string/map_key"/>
+            android:value="@string/map_key" />
+
+        <activity android:name=".activity.AnnouncementDetails" />
+        <activity android:name=".activity.EmergencyActivity"
+            android:label="Emergency"></activity>
     </application>
 
 </manifest>

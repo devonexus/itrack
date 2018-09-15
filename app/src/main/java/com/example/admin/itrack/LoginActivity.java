@@ -19,6 +19,7 @@ import android.widget.Toast;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.example.admin.itrack.activity.HomeActivity;
 import com.example.admin.itrack.models.Users;
 import com.example.admin.itrack.utils.ApiUrl;
 import com.example.admin.itrack.utils.Constants;
@@ -57,6 +58,7 @@ public class LoginActivity extends AppCompatActivity {
         etUsername = findViewById(R.id.username);
         etPassword = findViewById(R.id.password);
         userInstance = Users.getInstance();
+
         initPubnub();
         if (Build.VERSION.SDK_INT == Build.VERSION_CODES.M) {
             checkPermission();
@@ -121,7 +123,7 @@ public class LoginActivity extends AppCompatActivity {
                                                     userInstance.setImage(response.getString(image));
                                                     userInstance.setUserId(Integer.valueOf(response.getString(userId)));
                                                     userInstance.setUsertype(response.getString(usertype));
-                                                    startActivity(new Intent(getApplicationContext(), NavigationDrawerActivity.class));
+                                                    startActivity(new Intent(getApplicationContext(), HomeActivity.class));
                                                     finish();
                                                     hidepDialog();
                                                 } catch (JSONException e) {

@@ -31,6 +31,7 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
+import com.example.admin.itrack.activity.HomeActivity;
 import com.example.admin.itrack.fragment.HomeFragment;
 import com.example.admin.itrack.fragment.LocationFragment;
 import com.example.admin.itrack.fragment.Notifications;
@@ -124,7 +125,7 @@ public class NavigationDrawerActivity extends AppCompatActivity{
         if (savedInstanceState == null) {
             navItemIndex = 0;
             CURRENT_TAG = TAG_HOME;
-            loadHomeFragment();
+           // loadHomeFragment();
         }
 
         setDrawerItemLook();
@@ -133,7 +134,7 @@ public class NavigationDrawerActivity extends AppCompatActivity{
 
 
         menu = navigationView.getMenu();
-        if(userInstance.getUsertype().toString().equals("Parent")){
+        if(userInstance.getUsertype().equals("Parent")){
 
             navHome = menu.findItem(R.id.nav_home);
             navHome.setIcon(new IconicsDrawable(this)
@@ -159,6 +160,7 @@ public class NavigationDrawerActivity extends AppCompatActivity{
                     .color(Color.RED)
                     .sizeDp(24));
 
+            navNotification.setVisible(false);
 
             navLogout = menu.findItem(R.id.nav_logout);
             navLogout.setIcon(new IconicsDrawable(this)
@@ -190,7 +192,7 @@ public class NavigationDrawerActivity extends AppCompatActivity{
                     .icon(FontAwesome.Icon.faw_bell)
                     .color(Color.RED)
                     .sizeDp(24));
-
+            navNotification.setVisible(false);
 
             navLogout = menu.findItem(R.id.nav_logout);
             navLogout.setIcon(new IconicsDrawable(this)
@@ -241,8 +243,9 @@ public class NavigationDrawerActivity extends AppCompatActivity{
                     //Replacing the main content with ContentFragment Which is our Inbox View;
                     case R.id.nav_home:
                         navItemIndex = 0;
+//                        CURRENT_TAG = TAG_HOME;
+                        startActivity(new Intent(getApplicationContext(), HomeActivity.class));
 
-                        CURRENT_TAG = TAG_HOME;
                         break;
 
                     case R.id.nav_location:
@@ -252,21 +255,19 @@ public class NavigationDrawerActivity extends AppCompatActivity{
                     case R.id.nav_notifications:
                         navItemIndex = 2;
                         CURRENT_TAG = TAG_NOTIFICATIONS;
+
                         break;
                     case R.id.nav_announcement:
-                        //navItemIndex = 3;
-                        //CURRENT_TAG = TAG_ANNOUNCEMENT;
-                        Intent intent = new Intent(getApplicationContext(), AnnouncementActivity.class);
-                        intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                        startActivity(intent);
+                        // launch new intent instead of loading fragment
+                        navItemIndex = 3;
+                        startActivity(new Intent(NavigationDrawerActivity.this, AnnouncementActivity.class));
                         drawer.closeDrawers();
-                       return true;
+                        return true;
 
                     case R.id.nav_logout:
-                        navItemIndex = 4;
                         CURRENT_TAG = TAG_LOGOUT;
                         signOut();
-                        break;
+                        return true;
 //                    case R.id.nav_about_us:
 //                        // launch new intent instead of loading fragment
 //                        startActivity(new Intent(MainActivity.this, AboutUsActivity.class));
@@ -279,6 +280,7 @@ public class NavigationDrawerActivity extends AppCompatActivity{
 //                        return true;
                     default:
                         navItemIndex = 0;
+
                 }
 
                 //Checking if the item is in checked state or not, if not make it in checked state
@@ -288,8 +290,8 @@ public class NavigationDrawerActivity extends AppCompatActivity{
                     menuItem.setChecked(true);
                 }
                 menuItem.setChecked(true);
-
                 loadHomeFragment();
+//
 
                 return true;
             }
@@ -387,15 +389,15 @@ public class NavigationDrawerActivity extends AppCompatActivity{
                 // notifications fragment
                 Notifications notificationFragment = new Notifications();
                 return notificationFragment;
-//            case 3:
-//                // notifications fragment
-//                AnnouncementFragment announcementFragment = new AnnouncementFragment();
-//                return announcementFragment;
-//
+            case 3:
+                // notifications fragment
+                startActivity(new Intent(getApplicationContext(), AnnouncementActivity.class));
+
+
 //            case 4:
-//                // settings fragment
-//                SettingsFragment settingsFragment = new SettingsFragment();
-//                return settingsFragment;
+////                // settings fragment
+////                SettingsFragment settingsFragment = new SettingsFragment();
+////                return settingsFragment;
             default:
                 return new HomeFragment();
         }

@@ -4,8 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="10dp"
-    android:id="@+id/fragment_home_container"
-    android:background="#FCFCFC">
+    android:id="@+id/fragment_home_container">
     <ScrollView
         android:layout_width="fill_parent"
         android:layout_centerInParent="true"
@@ -84,6 +83,7 @@
                             android:background="@color/purple">
 
                             <ImageView
+                                android:id="@+id/img_announcement"
                                 android:layout_width="64dp"
                                 android:layout_height="64dp"
                                 android:padding="10dp"
