@@ -18,13 +18,12 @@ import android.provider.Telephony;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -36,9 +35,10 @@ import com.example.admin.itrack.AnnouncementActivity;
 import com.example.admin.itrack.LoginActivity;
 import com.example.admin.itrack.NavigationDrawerActivity;
 import com.example.admin.itrack.R;
-import com.example.admin.itrack.fragment.TableParentAssignFragment;
+import com.example.admin.itrack.models.AppToken;
 import com.example.admin.itrack.models.TableParentAssign;
 import com.example.admin.itrack.models.Users;
+import com.example.admin.itrack.services.FireBaseInstanceIdService;
 import com.example.admin.itrack.utils.ApiUrl;
 import com.example.admin.itrack.utils.Constants;
 import com.example.admin.itrack.utils.CustomJSONRequest;
@@ -58,6 +58,10 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.messaging.FirebaseMessaging;
 import com.mikepenz.fontawesome_typeface_library.FontAwesome;
 import com.mikepenz.iconics.IconicsDrawable;
 import com.pubnub.api.callbacks.PNCallback;
@@ -76,9 +80,6 @@ public class HomeActivity extends NavigationDrawerActivity implements LocationLi
     
     private FusedLocationProviderClient mFusedLocationClient; // Object used to receive location updates
     private LocationRequest locationRequest; // Object that defines important parameters regarding location request.
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
     private GoogleApiClient googleApiClient;
     private ImageView img_location, imgAnnouncement, imgEmergency, imgSms;
     public static Users users;
@@ -87,9 +88,8 @@ public class HomeActivity extends NavigationDrawerActivity implements LocationLi
     private ProgressDialog pDialog;
     protected static final int REQUEST_CHECK_SETTINGS = 0x1;
     private Location mCurrentLocation;
-    //Any random number you can take
-    public static final int REQUEST_PERMISSION_LOCATION = 10;
-
+    public static TableParentAssign tableParentAssign;
+    public static AppToken appToken;
     GoogleApiClient mGoogleApiClient;
     /**
      * Stores the types of location services the client is interested in using. Used for checking
@@ -101,6 +101,7 @@ public class HomeActivity extends NavigationDrawerActivity implements LocationLi
      */
     private String lat, lng;
     protected LocationRequest mLocationRequest;
+    private LinearLayout llEmergencyBackground;
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -115,24 +116,45 @@ public class HomeActivity extends NavigationDrawerActivity implements LocationLi
         txt_location = findViewById(R.id.txt_location);
         imgEmergency = findViewById(R.id.imgEmergency);
         imgSms = findViewById(R.id.imgSms);
+        tableParentAssign = TableParentAssign.getInstance();
+        appToken = AppToken.getInstance();
+        llEmergencyBackground = findViewById(R.id.llEmergencyBackground);
+        //Toast.makeText(getApplicationContext(), "TOKEN :"+FireBaseInstanceIdService.getToken(getApplicationContext());, Toast.LENGTH_SHORT).show();
+
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(getApplicationContext());
         if (users.getUsertype().toString().equals("Parent")) {
             img_location.setImageResource(R.drawable.ic_location_on_black_24dp);
             txt_location.setText(getResources().getString(R.string.track_minor));
-            img_location.setOnClickListener(new View.OnClickListener() {
+            FirebaseInstanceId.getInstance().getToken();
+            assignToken(FirebaseInstanceId.getInstance().getToken(), userInstance.getUserId());
+
+            // [END subscribe_topics]
+            appToken.setAppToken(FirebaseInstanceId.getInstance().getToken());
+            FirebaseMessaging.getInstance().subscribeToTopic("emergency"+users.getUserId())
+                    .addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+                            String msg = getString(R.string.msg_subscribed);
+                            if (!task.isSuccessful()) {
+                                msg = getString(R.string.msg_subscribe_failed);
+
+                            }
+                            Log.d(TAG, msg);
+                            Toast.makeText(HomeActivity.this, msg, Toast.LENGTH_SHORT).show();
+                        }
+                    });
+
+
+            imgAnnouncement.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
 
-//                    Fragment locationFragment = new TableParentAssignFragment();
-//                    locationFragment.getActivity().setTitle("Location");
-//                    FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-//                    //fragmentTransaction.replace(R.id.activity_home_container, locationFragment);
-////                    fragmentTransaction.replace(null, locationFragment);
-//                    fragmentTransaction.addToBackStack(null);
-//                    fragmentTransaction.commit();
-//                    String KEY_ID = "1";
-//                    String id = getIntent().getStringExtra(KEY_ID);
-//                    TableParentAssignFragment tableParentAssignFragment = TableParentAssignFragment.newInstance(id);
+                    startActivity(new Intent(getApplicationContext(), AnnouncementActivity.class));
+                }
+            });
+            img_location.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
                     Intent intent = new Intent(getApplicationContext(), TableParentAssignActivity.class);
                     intent .putExtra("openF2",true);
                     overridePendingTransition(0, 0);
@@ -141,19 +163,8 @@ public class HomeActivity extends NavigationDrawerActivity implements LocationLi
                     startActivity(intent);
                 }
             });
-            imgEmergency.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    startActivity(new Intent(getApplicationContext(), EmergencyActivity.class));
-                }
-            });
-            imgAnnouncement.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
+            llEmergencyBackground.setBackgroundColor(Color.GRAY);
 
-                    startActivity(new Intent(getApplicationContext(), AnnouncementActivity.class));
-                }
-            });
             imgSms.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
@@ -162,6 +173,9 @@ public class HomeActivity extends NavigationDrawerActivity implements LocationLi
             });
 //            txt_location
         } else if (users.getUsertype().toString().equals("Minor")) {
+
+            appToken.setAppToken(FirebaseInstanceId.getInstance().getToken());
+            GetParentByMinorId(userInstance.getUserId());
             img_location.setImageResource(R.drawable.ic_my_location_black_24dp);
             txt_location.setText(getResources().getString(R.string.publish_location));
             createLocationRequest();
@@ -211,6 +225,62 @@ public class HomeActivity extends NavigationDrawerActivity implements LocationLi
         }
     }
 
+    private void assignToken(final String token, final int userId ){
+        CustomJSONRequest sendEmergencyRequest = new CustomJSONRequest(Request.Method.POST, ApiUrl.APP_TOKEN_URL, null,
+                new Response.Listener<JSONObject>() {
+
+                    @Override
+                    public void onResponse(JSONObject response) {
+
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                error.printStackTrace();
+            }
+        }){
+
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Map<String, String> params = new HashMap<String, String>();
+                params.put(KeyConfig.APP_TOKEN, token);
+                params.put(KeyConfig.userId, String.valueOf(userId));
+                return params;
+            }
+        };
+        VolleySingleton.getInstance(HomeActivity.this).addToRequestQueue(sendEmergencyRequest);
+    }
+
+
+    private void GetParentByMinorId(final int minorId){
+        CustomJSONRequest sendEmergencyRequest = new CustomJSONRequest(Request.Method.POST, ApiUrl.TABLE_PARENT_ASSIGN_URL, null,
+                new Response.Listener<JSONObject>() {
+
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+                            userInstance.setAppToken(response.getString("appToken"));
+                            tableParentAssign.setParent_id(response.getString("parentId"));
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                error.printStackTrace();
+            }
+        }){
+
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Map<String, String> params = new HashMap<String, String>();
+                params.put(KeyConfig.minor_id, String.valueOf(minorId));
+                return params;
+            }
+        };
+        VolleySingleton.getInstance(HomeActivity.this).addToRequestQueue(sendEmergencyRequest);
+    }
 
     private void sendSMS() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) // At least KitKat

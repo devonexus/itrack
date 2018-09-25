@@ -2,7 +2,6 @@ package com.example.admin.itrack.adapter;
 
 import android.app.ProgressDialog;
 import android.content.Context;
-import android.support.v4.app.FragmentActivity;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,9 +19,9 @@ import com.android.volley.VolleyError;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.example.admin.itrack.R;
-import com.example.admin.itrack.activity.EmergencyActivity;
-import com.example.admin.itrack.fragment.LocationFragment;
+import com.example.admin.itrack.models.AppToken;
 import com.example.admin.itrack.models.EmergencyType;
+import com.example.admin.itrack.models.TableParentAssign;
 import com.example.admin.itrack.models.Users;
 import com.example.admin.itrack.utils.ApiUrl;
 import com.example.admin.itrack.utils.CustomJSONRequest;
@@ -44,6 +43,8 @@ public class EmergencyAdapter extends RecyclerView.Adapter<EmergencyAdapter.MyVi
     private ProgressDialog pDialog;
     public static Users users;
     public static EmergencyType emergencyType;
+    public static TableParentAssign tableParentAssign;
+    public static AppToken appToken;
     public EmergencyAdapter(Context context, List<EmergencyType> emergencyTypeList) {
         this.context = context;
         this.emergencyTypeList = emergencyTypeList;
@@ -53,7 +54,7 @@ public class EmergencyAdapter extends RecyclerView.Adapter<EmergencyAdapter.MyVi
     public class MyViewHolder extends RecyclerView.ViewHolder{
         public TextView txtEmergencyName;
         public ImageView imgEmergencyTypeImage;
-        public RelativeLayout viewBackground, viewForeground;
+        public RelativeLayout viewForeground;
         public Button btnToggleEmergency;
         public MyViewHolder(View view){
             super(view);
@@ -64,6 +65,9 @@ public class EmergencyAdapter extends RecyclerView.Adapter<EmergencyAdapter.MyVi
         }
     }
 
+
+
+
     @Override
     public MyViewHolder onCreateViewHolder(final ViewGroup parent, int viewType) {
         View itemView = LayoutInflater.from(parent.getContext())
@@ -71,6 +75,8 @@ public class EmergencyAdapter extends RecyclerView.Adapter<EmergencyAdapter.MyVi
         MyViewHolder viewHolder = new MyViewHolder(itemView);
         users = Users.getInstance();
         emergencyType = EmergencyType.getInstance();
+        tableParentAssign = TableParentAssign.getInstance();
+        appToken = AppToken.getInstance();
         initializeProgressDialogState();
         return viewHolder;
     }
@@ -87,7 +93,6 @@ public class EmergencyAdapter extends RecyclerView.Adapter<EmergencyAdapter.MyVi
 
         Glide.with(context)
                 .load(emergencyType.getEmergencyPic())
-
                 .apply(RequestOptions.centerCropTransform())
                 .transition(withCrossFade())
                 .into(holder.imgEmergencyTypeImage);
@@ -99,7 +104,7 @@ public class EmergencyAdapter extends RecyclerView.Adapter<EmergencyAdapter.MyVi
             public void onClick(final View view) {
              
                 showpDialog();
-                CustomJSONRequest stopDeploymentRequest  = new CustomJSONRequest(Request.Method.POST, ApiUrl.EMERGENCY_TYPE_URL, null,
+                CustomJSONRequest sendEmergency  = new CustomJSONRequest(Request.Method.POST, ApiUrl.EMERGENCY_TYPE_URL, null,
                         new Response.Listener<JSONObject>(){
                             @Override
                             public void onResponse(JSONObject response) {
@@ -107,9 +112,8 @@ public class EmergencyAdapter extends RecyclerView.Adapter<EmergencyAdapter.MyVi
 
                                 try {
                                     if(response.getString(KeyConfig.RESULT).equals("1")){
-
                                         hidepDialog();
-                                        Toast.makeText(context, "Emergency trigger was sent.", Toast.LENGTH_LONG).show();
+//                                        Toast.makeText(context, "Emergency trigger was sent.", Toast.LENGTH_LONG).show();
                                     }
                                 } catch (JSONException e) {
                                     e.printStackTrace();
@@ -131,17 +135,64 @@ public class EmergencyAdapter extends RecyclerView.Adapter<EmergencyAdapter.MyVi
                         Map<String, String> params = new HashMap<String, String>();
                         params.put(KeyConfig.userId, String.valueOf(users.getUserId()));
                         params.put(KeyConfig.emergencyType, String.valueOf(emergencyType.getEmergencyTypeId()));
-
                         return params;
                     }
                 };
-                VolleySingleton.getInstance(context).addToRequestQueue(stopDeploymentRequest);
+                VolleySingleton.getInstance(context).addToRequestQueue(sendEmergency);
+
+
+                sendEmergency(context, emergencyType.getEmergencyTypeName(), emergencyType.getEmergencyTypeName(), users.getAppToken(), emergencyType.getEmergencyPic());
+
             }
         });
  
 
 
     }
+
+
+
+
+
+    private void sendEmergency(final Context context, final String title, final String message, final String topic, final String imageUrl){
+        CustomJSONRequest sendEmergencyRequest = new CustomJSONRequest(Request.Method.POST, ApiUrl.TOPIC_URL, null,
+                new Response.Listener<JSONObject>() {
+
+
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+                            if(response.getString(KeyConfig.EMERGENCY_SUCCESS).equals("1")){
+                                Toast.makeText(context, "Emergency trigger was sent.", Toast.LENGTH_SHORT).show();
+                            }else  if(response.getString(KeyConfig.EMERGENCY_SUCCESS).equals("0")){
+                                Toast.makeText(context, "Emergency alert not sent, Tap again!!!!", Toast.LENGTH_SHORT).show();
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                error.printStackTrace();
+                Toast.makeText(context, "Error gettign response from server...", Toast.LENGTH_SHORT).show();
+            }
+        }){
+
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Map<String, String> params = new HashMap<String, String>();
+                params.put(KeyConfig.EMERGENCY_TITLE, title);
+                params.put(KeyConfig.EMERGENCY_MESSAGE, message);
+                params.put(KeyConfig.EMERGENCY_TOPIC, topic);
+                params.put(KeyConfig.IMAGE_URL, imageUrl);
+                return params;
+            }
+        };
+        VolleySingleton.getInstance(context).addToRequestQueue(sendEmergencyRequest);
+    }
+
 
     @Override
     public int getItemCount() {

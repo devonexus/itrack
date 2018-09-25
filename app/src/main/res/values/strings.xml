@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">ITrack</string>
+    <string name="app_name">ITrack Minor</string>
     <string name="hint_username">Username</string>
     <string name="hint_password">Password</string>
     <string name="login">Login</string>
@@ -24,7 +24,8 @@
         <item>Announcement</item>
         <item>Toggle emergency</item>
     </string-array>
-
+    <string name="msg_subscribed">App token has been issued</string>
+    <string name="msg_subscribe_failed">Failed to subscribe to emergency topic</string>
     <string name="activity_title_about_us">About Us</string>
     <string name="activity_title_privacy_policy">Privacy Policy</string>
     <string name="action_clear_all">Clear All</string>

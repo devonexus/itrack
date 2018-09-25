@@ -8,6 +8,7 @@ public class Users {
     private String image;
     private String usertype;
     private String minorFullName;
+    private String appToken;
     public String getImage() {
         return image;
     }
@@ -77,5 +78,13 @@ public class Users {
 
     public void setMinorFullName(String minorFullName) {
         this.minorFullName = minorFullName;
+    }
+
+    public String getAppToken() {
+        return appToken;
+    }
+
+    public void setAppToken(String appToken) {
+        this.appToken = appToken;
     }
 }
