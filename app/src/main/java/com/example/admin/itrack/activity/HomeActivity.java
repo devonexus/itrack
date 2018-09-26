@@ -330,7 +330,7 @@ public class HomeActivity extends NavigationDrawerActivity implements LocationLi
                 try {
                     // Show the dialog by calling startResolutionForResult(), and check the result
                     // in onActivityResult().
-                    status.startResolutionForResult((HomeActivity) getApplicationContext(), REQUEST_CHECK_SETTINGS);
+                    status.startResolutionForResult( this, REQUEST_CHECK_SETTINGS);
                 } catch (IntentSender.SendIntentException e) {
                     Log.i(TAG, "PendingIntent unable to execute request.");
                 }
