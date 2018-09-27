@@ -165,6 +165,13 @@ public class HomeActivity extends NavigationDrawerActivity implements LocationLi
             });
             llEmergencyBackground.setBackgroundColor(Color.GRAY);
 
+            imgEmergency.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                  //  startActivity(new Intent(getApplicationContext(), NotificationDetails.class));
+                }
+            });
+
             imgSms.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
